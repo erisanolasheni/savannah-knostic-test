@@ -33,3 +33,69 @@ export async function fetchStores() {
     if (!res.ok) throw new Error('Failed to fetch stores');
     return res.json();
 }
+
+export async function fetchStoreById(id: string) {
+    const res = await fetch(`${API_URL}/stores/${id}`);
+    if (!res.ok) throw new Error('Store not found');
+    return res.json();
+}
+
+export async function fetchStoreProducts(
+    storeId: string,
+    options: { page?: number; limit?: number } = {}
+) {
+    const params = new URLSearchParams();
+    if (options.page) params.set('page', String(options.page));
+    if (options.limit) params.set('limit', String(options.limit));
+    const res = await fetch(`${API_URL}/stores/${storeId}/products?${params.toString()}`);
+    if (!res.ok) throw new Error('Failed to fetch store products');
+    return res.json();
+}
+
+export async function createStore(data: { name: string; location: string }) {
+    const res = await fetch(`${API_URL}/stores`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+    });
+    if (!res.ok) throw new Error('Failed to create store');
+    return res.json();
+}
+
+export async function updateStore(id: string, data: Partial<{ name: string; location: string }>) {
+    const res = await fetch(`${API_URL}/stores/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+    });
+    if (!res.ok) throw new Error('Failed to update store');
+    return res.json();
+}
+
+export async function deleteStore(id: string) {
+    const res = await fetch(`${API_URL}/stores/${id}`, { method: 'DELETE' });
+    if (!res.ok) throw new Error('Failed to delete store');
+    return res.json();
+}
+
+export async function createProduct(data: {
+    storeId: string;
+    name: string;
+    category: string;
+    price: number;
+    quantity: number;
+}) {
+    const res = await fetch(`${API_URL}/products`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+    });
+    if (!res.ok) throw new Error('Failed to create product');
+    return res.json();
+}
+
+export async function deleteProduct(id: string) {
+    const res = await fetch(`${API_URL}/products/${id}`, { method: 'DELETE' });
+    if (!res.ok) throw new Error('Failed to delete product');
+    return res.json();
+}

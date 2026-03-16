@@ -20,15 +20,21 @@ This will:
 
 ## API Sketch
 
+**Stores**
 * `GET /stores` - Fetch all stores.
 * `GET /stores/:id` - Fetch single store details.
 * `POST /stores` - Create a new store.
-* `GET /products` - Fetch all products with filtering (`storeId`, `category`, `minPrice`, `maxPrice`, `minStock`) and pagination.
-* `GET /stores/:id/products` - Fetch products for a specific store.
+* `PATCH /stores/:id` - Partial update for a store.
+* `DELETE /stores/:id` - Delete a store (products cascade).
+* `GET /stores/:id/products` - Fetch products for a specific store (with pagination/filters).
 * `GET /stores/:id/inventory-value` - **(Non-trivial)** Aggregates total items and computes total monetary stock value.
+
+**Products**
+* `GET /products` - Fetch all products with filtering (`storeId`, `category`, `minPrice`, `maxPrice`, `minStock`) and pagination.
 * `GET /products/:id` - Fetch a specific product.
 * `POST /products` - Create a new product.
-* `PATCH /products/:id` - Partial update for a specific product.
+* `PATCH /products/:id` - Partial update for a product.
+* `DELETE /products/:id` - Delete a product.
 
 ## Decisions & Trade-offs
 
@@ -40,16 +46,17 @@ This project was built with a strong focus on **clarity, correctness, and simple
 * **Trade-off**: SQLite limits concurrent high-volume writes, but for a simple inventory demo, its zero-config startup far outweighs the need for Postgres scaling.
 
 ### 2. Backend & API Semantics
-* **Choice**: **Node.js + Fastify** with **Zod** validation.
+* **Choice**: **Node.js + Fastify** with **Zod** validation. Routes live in `server/src/routes/` and delegate to **services** (`server/src/services/`); route handlers only validate input and send responses—no direct DB or business logic in routes.
 * **Reasoning**: Fastify natively offers massive routing performance and isolated scoping. By validating request schemas directly via Zod, we eliminate fragile `try...catch` boilerplate.
 * **Production-Ready Semantics**: Errors are caught globally and serialized into an explicit contract (e.g., `{ error: 'VALIDATION_ERROR', details: [...] }`). Pagination utilizes standard `skip`/`take` limits avoiding query overloads.
 
 ### 3. Frontend & UX Basics
-* **Choice**: **React + Vite** with **React Query** and **Tailwind CSS**.
+* **Choice**: **React + Vite** with **React Query** and **Tailwind CSS**. Reusable UI lives in `web/src/components/` (Layout, DataTable, forms, etc.); pages compose these and stay thin.
 * **Reasoning**: React Query handles all async orchestration elegantly. The UI addresses critical UX metrics:
   - Global loading spinners and error states are handled safely.
   - Empty states (when filters return no matches) provide clear feedback.
   - Filtering operates dynamically across both Store and Category metrics alongside robust offset pagination.
+  - **Stores** and **Products** each have full CRUD in the UI (list, add, view, edit, delete). Browser tab titles update per page.
 
 ### 4. Developer Experience (DX)
 * **Choice**: Dockerized local environment with an auto-seeding script (`prisma/seed.ts`).
