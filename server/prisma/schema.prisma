@@ -11,6 +11,7 @@ model Store {
   id       String    @id @default(uuid())
   name     String
   location String
+  seedKey  String?   @unique
   products Product[]
 
   @@map("stores")
@@ -25,6 +26,7 @@ model Product {
   quantity Int
   store    Store    @relation(fields: [storeId], references: [id], onDelete: Cascade)
 
+  seedKey  String?   @unique
   @@index([storeId])
   @@index([category])
   @@map("products")

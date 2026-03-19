@@ -16,12 +16,12 @@ export function Pagination({
   onNext,
 }: PaginationProps) {
   return (
-    <div className="mt-4 flex flex-col sm:flex-row items-center justify-between gap-4">
-      <p className="text-sm text-gray-700">
-        Showing page <span className="font-medium">{page}</span> of{' '}
-        <span className="font-medium">{totalPages}</span> ({total} total items)
+    <div className="mt-2 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+      <p className="text-sm text-muted-foreground">
+        Showing page <span className="font-medium text-foreground">{page}</span> of{' '}
+        <span className="font-medium text-foreground">{totalPages}</span> ({total} total)
       </p>
-      <div className="flex gap-2">
+      <div className="flex gap-1.5">
         <Button variant="secondary" disabled={page === 1} onClick={onPrevious}>
           Previous
         </Button>

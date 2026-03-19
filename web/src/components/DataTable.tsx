@@ -1,7 +1,17 @@
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "./ui/table";
+import { cn } from "../lib/utils";
+
 interface Column<T> {
   key: string;
   header: string;
-  align?: 'left' | 'right';
+  align?: "left" | "right";
   render: (item: T) => React.ReactNode;
 }
 
@@ -16,46 +26,50 @@ export function DataTable<T>({
   columns,
   data,
   keyFn,
-  emptyMessage = 'No items found.',
+  emptyMessage = "No items found.",
 }: DataTableProps<T>) {
   if (data.length === 0) {
     return (
-      <div className="py-12 text-center text-gray-500">
+      <div className="py-8 text-center text-sm text-muted-foreground">
         {emptyMessage}
       </div>
     );
   }
 
   return (
-    <div className="overflow-x-auto">
-      <table className="min-w-full divide-y divide-gray-200">
-        <thead className="bg-gray-50">
-          <tr>
-            {columns.map((col) => (
-              <th
-                key={col.key}
-                className={`px-6 py-3 text-xs font-medium text-gray-500 uppercase ${col.align === 'right' ? 'text-right' : 'text-left'}`}
-              >
-                {col.header}
-              </th>
-            ))}
-          </tr>
-        </thead>
-        <tbody className="bg-white divide-y divide-gray-200">
-          {data.map((item) => (
-            <tr key={keyFn(item)}>
-              {columns.map((col) => (
-                <td
-                  key={col.key}
-                  className={`px-6 py-4 whitespace-nowrap text-sm text-gray-500 ${col.align === 'right' ? 'text-right' : 'text-left'}`}
-                >
-                  {col.render(item)}
-                </td>
-              ))}
-            </tr>
+    <Table>
+      <TableHeader>
+        <TableRow className="border-border bg-muted/50 hover:bg-muted/50">
+          {columns.map((col) => (
+            <TableHead
+              key={col.key}
+              className={cn(
+                "text-muted-foreground font-medium",
+                col.align === "right" && "text-right"
+              )}
+            >
+              {col.header}
+            </TableHead>
           ))}
-        </tbody>
-      </table>
-    </div>
+        </TableRow>
+      </TableHeader>
+      <TableBody>
+        {data.map((item) => (
+          <TableRow key={keyFn(item)} className="transition-colors">
+            {columns.map((col) => (
+              <TableCell
+                key={col.key}
+                className={cn(
+                  "text-foreground",
+                  col.align === "right" && "text-right"
+                )}
+              >
+                {col.render(item)}
+              </TableCell>
+            ))}
+          </TableRow>
+        ))}
+      </TableBody>
+    </Table>
   );
 }

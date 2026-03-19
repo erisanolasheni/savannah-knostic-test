@@ -1,18 +1,23 @@
+FROM node:22-alpine AS builder
+
+WORKDIR /app
+
+COPY package.json package-lock.json* ./
+RUN npm ci
+
+COPY . .
+RUN npm run build
+
 FROM node:22-alpine
 
 WORKDIR /app
 
-COPY package*.json ./
-RUN npm install
+RUN addgroup -g 1001 -S app && adduser -u 1001 -S app -G app
 
-COPY . .
+COPY --from=builder /app/dist ./dist
 
-# build the app
-RUN npm run build
-
-# Use a lightweight server
-RUN npm install -g serve
+USER app
 
 EXPOSE 5173
-# map serve port
-CMD ["serve", "-s", "dist", "-l", "5173"]
+
+CMD ["npx", "-y", "serve", "-s", "dist", "-l", "5173"]

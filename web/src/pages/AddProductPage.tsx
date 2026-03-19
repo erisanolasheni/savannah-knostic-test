@@ -1,16 +1,18 @@
 import { useState } from 'react';
 import { useLocation, Link } from 'wouter';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { createProduct, fetchStores } from '../api';
+import { toast } from 'sonner';
+import { createProduct, fetchStores, fetchCategories } from '../api';
 import { useDocumentTitle } from '../hooks/useDocumentTitle';
 import { PageCard, ProductForm, type ProductFormData, LoadingState, ErrorState } from '../components';
+import { Button } from '../components/ui/button';
 
 const initialData: ProductFormData = {
   name: '',
   category: '',
   price: 0,
   quantity: 0,
-  storeId: '',
+  storeId: undefined,
 };
 
 export function AddProductPage() {
@@ -24,6 +26,11 @@ export function AddProductPage() {
     queryFn: fetchStores,
   });
 
+  const { data: categories = [] } = useQuery({
+    queryKey: ['categories'],
+    queryFn: fetchCategories,
+  });
+
   const mutation = useMutation({
     mutationFn: (data: ProductFormData) =>
       createProduct({
@@ -35,33 +42,42 @@ export function AddProductPage() {
       }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['products'] });
+      queryClient.invalidateQueries({ queryKey: ['categories'] });
+      toast.success('Product created');
       setLocation('/');
     },
   });
 
-  if (storesLoading) return <LoadingState message="Loading stores..." />;
+  if (storesLoading) return <LoadingState message="Loading stores…" />;
   if (storesError) return <ErrorState message="Failed to load stores." />;
 
   return (
-    <PageCard className="max-w-xl">
-      <div className="flex justify-between items-center mb-6">
-        <h2 className="text-xl font-medium text-gray-900">Add Product</h2>
-        <Link href="/" className="text-blue-600 hover:text-blue-900 text-sm">
-          Back to Products
+    <PageCard
+      className="max-w-xl"
+      title="Add product"
+      action={
+        <Link href="/">
+          <Button variant="outline" size="sm" className="transition-colors">
+            Back to Products
+          </Button>
         </Link>
+      }
+    >
+      <div className="space-y-4">
+        <ProductForm
+          data={formData}
+          onChange={setFormData}
+          onSubmit={() => formData.storeId && mutation.mutate(formData)}
+          isSubmitting={mutation.isPending}
+          submitLabel="Create product"
+          showStoreSelect
+          storeOptions={stores ?? []}
+          categoryOptions={categories}
+        />
+        {mutation.isError && (
+          <p className="text-sm text-destructive">{mutation.error?.message}</p>
+        )}
       </div>
-      <ProductForm
-        data={formData}
-        onChange={setFormData}
-        onSubmit={() => formData.storeId && mutation.mutate(formData)}
-        isSubmitting={mutation.isPending}
-        submitLabel="Create Product"
-        showStoreSelect
-        storeOptions={stores ?? []}
-      />
-      {mutation.isError && (
-        <p className="mt-4 text-sm text-red-500">{mutation.error?.message}</p>
-      )}
     </PageCard>
   );
 }

@@ -7,16 +7,9 @@ export async function storeRoutes(fastify: FastifyInstance) {
         return storeService.getMany();
     });
 
-    fastify.get('/stores/:id', async (request, reply) => {
+    fastify.get('/stores/:id', async (request) => {
         const { id } = request.params as { id: string };
-        try {
-            return await storeService.getById(id);
-        } catch (e) {
-            if (e instanceof storeService.NotFoundError) {
-                return reply.status(404).send({ error: 'NOT_FOUND', message: e.message });
-            }
-            throw e;
-        }
+        return storeService.getById(id);
     });
 
     fastify.post('/stores', async (request, reply) => {
@@ -42,26 +35,12 @@ export async function storeRoutes(fastify: FastifyInstance) {
                 details: parsed.error.issues,
             });
         }
-        try {
-            return await storeService.update(id, parsed.data);
-        } catch (e) {
-            if (e instanceof storeService.NotFoundError) {
-                return reply.status(404).send({ error: 'NOT_FOUND', message: e.message });
-            }
-            throw e;
-        }
+        return storeService.update(id, parsed.data);
     });
 
-    fastify.delete('/stores/:id', async (request, reply) => {
+    fastify.delete('/stores/:id', async (request) => {
         const { id } = request.params as { id: string };
-        try {
-            return await storeService.remove(id);
-        } catch (e) {
-            if (e instanceof storeService.NotFoundError) {
-                return reply.status(404).send({ error: 'NOT_FOUND', message: e.message });
-            }
-            throw e;
-        }
+        return storeService.remove(id);
     });
 
     fastify.get('/stores/:id/products', async (request, reply) => {
@@ -74,33 +53,22 @@ export async function storeRoutes(fastify: FastifyInstance) {
                 details: parsed.error.issues,
             });
         }
-        const { page, limit, category, minPrice, maxPrice, minStock } = parsed.data;
-        try {
-            return await storeService.getProducts(id, {
-                page,
-                limit,
-                category,
-                minPrice,
-                maxPrice,
-                minStock,
-            });
-        } catch (e) {
-            if (e instanceof storeService.NotFoundError) {
-                return reply.status(404).send({ error: 'NOT_FOUND', message: e.message });
-            }
-            throw e;
-        }
+        const { page, limit, category, minPrice, maxPrice, minStock, q, sortBy, sortOrder } = parsed.data;
+        return storeService.getProducts(id, {
+            page,
+            limit,
+            category,
+            minPrice,
+            maxPrice,
+            minStock,
+            q,
+            sortBy,
+            sortOrder,
+        });
     });
 
-    fastify.get('/stores/:id/inventory-value', async (request, reply) => {
+    fastify.get('/stores/:id/inventory-value', async (request) => {
         const { id } = request.params as { id: string };
-        try {
-            return await storeService.getInventoryValue(id);
-        } catch (e) {
-            if (e instanceof storeService.NotFoundError) {
-                return reply.status(404).send({ error: 'NOT_FOUND', message: e.message });
-            }
-            throw e;
-        }
+        return storeService.getInventoryValue(id);
     });
 }

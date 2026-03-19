@@ -5,6 +5,7 @@ export { LoadingState } from './LoadingState';
 export { ErrorState } from './ErrorState';
 export { Button } from './Button';
 export { ConfirmButton } from './ConfirmButton';
+export { DeleteConfirmDialog } from './DeleteConfirmDialog';
 export { Pagination } from './Pagination';
 export { DataTable } from './DataTable';
 export { FilterBar } from './FilterBar';

@@ -5,12 +5,18 @@ export const paginationSchema = z.object({
     limit: z.coerce.number().min(1).max(100).default(10),
 });
 
+const productSortBySchema = z.enum(['name', 'category', 'price', 'quantity']).optional().default('name');
+const sortOrderSchema = z.enum(['asc', 'desc']).optional().default('asc');
+
 export const productFilterSchema = paginationSchema.extend({
     category: z.string().optional(),
     minPrice: z.coerce.number().optional(),
     maxPrice: z.coerce.number().optional(),
     minStock: z.coerce.number().optional(),
     storeId: z.string().uuid().optional(),
+    q: z.string().optional(),
+    sortBy: productSortBySchema,
+    sortOrder: sortOrderSchema,
 });
 
 export const createStoreSchema = z.object({

@@ -9,6 +9,12 @@ services:
       - DATABASE_URL=file:./dev.db
     volumes:
       - ./server/dev.db:/app/dev.db
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:3000/health"]
+      interval: 5s
+      timeout: 3s
+      retries: 3
+      start_period: 10s
 
   web:
     build:
@@ -19,4 +25,5 @@ services:
     environment:
       - VITE_API_URL=http://localhost:3000
     depends_on:
-      - server
+      server:
+        condition: service_healthy

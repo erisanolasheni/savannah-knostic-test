@@ -1,19 +1,6 @@
 import { prisma } from '../db';
-import type { Prisma } from '@prisma/client';
-
-export class NotFoundError extends Error {
-    constructor(message: string) {
-        super(message);
-        this.name = 'NotFoundError';
-    }
-}
-
-export class BadRequestError extends Error {
-    constructor(message: string) {
-        super(message);
-        this.name = 'BadRequestError';
-    }
-}
+import { NotFoundError, BadRequestError, handlePrismaNotFound } from '../errors';
+import { buildProductWhere, buildProductOrderBy, type ProductSortBy, type SortOrder } from '../lib/productFilters';
 
 export async function getMany(opts: {
     page: number;
@@ -23,18 +10,12 @@ export async function getMany(opts: {
     maxPrice?: number;
     minStock?: number;
     storeId?: string;
+    q?: string;
+    sortBy?: ProductSortBy;
+    sortOrder?: SortOrder;
 }) {
-    const where: Prisma.ProductWhereInput = {};
-    if (opts.storeId) where.storeId = opts.storeId;
-    if (opts.category) where.category = opts.category;
-    if (opts.minPrice !== undefined || opts.maxPrice !== undefined) {
-        where.price = {};
-        if (opts.minPrice !== undefined) where.price.gte = opts.minPrice;
-        if (opts.maxPrice !== undefined) where.price.lte = opts.maxPrice;
-    }
-    if (opts.minStock !== undefined) {
-        where.quantity = { gte: opts.minStock };
-    }
+    const where = buildProductWhere(opts);
+    const orderBy = buildProductOrderBy(opts.sortBy ?? 'name', opts.sortOrder ?? 'asc');
 
     const [total, data] = await Promise.all([
         prisma.product.count({ where }),
@@ -43,7 +24,7 @@ export async function getMany(opts: {
             skip: (opts.page - 1) * opts.limit,
             take: opts.limit,
             include: { store: true },
-            orderBy: { name: 'asc' },
+            orderBy,
         }),
     ]);
 
@@ -54,6 +35,15 @@ export async function getMany(opts: {
         limit: opts.limit,
         totalPages: Math.ceil(total / opts.limit),
     };
+}
+
+export async function getDistinctCategories(): Promise<string[]> {
+    const rows = await prisma.product.findMany({
+        select: { category: true },
+        distinct: ['category'],
+        orderBy: { category: 'asc' },
+    });
+    return rows.map((r) => r.category);
 }
 
 export async function getById(id: string) {
@@ -87,10 +77,7 @@ export async function update(
             data,
         });
     } catch (e) {
-        if (e && typeof e === 'object' && 'code' in e && (e as { code: string }).code === 'P2025') {
-            throw new NotFoundError('Product not found');
-        }
-        throw e;
+        handlePrismaNotFound(e, 'Product not found');
     }
 }
 
@@ -98,9 +85,6 @@ export async function remove(id: string) {
     try {
         return await prisma.product.delete({ where: { id } });
     } catch (e) {
-        if (e && typeof e === 'object' && 'code' in e && (e as { code: string }).code === 'P2025') {
-            throw new NotFoundError('Product not found');
-        }
-        throw e;
+        handlePrismaNotFound(e, 'Product not found');
     }
 }

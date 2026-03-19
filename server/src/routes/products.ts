@@ -7,6 +7,10 @@ import {
 import * as productService from '../services/productService';
 
 export async function productRoutes(fastify: FastifyInstance) {
+    fastify.get('/products/categories', async () => {
+        return productService.getDistinctCategories();
+    });
+
     fastify.get('/products', async (request, reply) => {
         const parsed = productFilterSchema.safeParse(request.query);
         if (!parsed.success) {
@@ -16,7 +20,7 @@ export async function productRoutes(fastify: FastifyInstance) {
                 details: parsed.error.issues,
             });
         }
-        const { page, limit, category, minPrice, maxPrice, minStock, storeId } = parsed.data;
+        const { page, limit, category, minPrice, maxPrice, minStock, storeId, q, sortBy, sortOrder } = parsed.data;
         return productService.getMany({
             page,
             limit,
@@ -25,19 +29,15 @@ export async function productRoutes(fastify: FastifyInstance) {
             maxPrice,
             minStock,
             storeId,
+            q,
+            sortBy,
+            sortOrder,
         });
     });
 
-    fastify.get('/products/:id', async (request, reply) => {
+    fastify.get('/products/:id', async (request) => {
         const { id } = request.params as { id: string };
-        try {
-            return await productService.getById(id);
-        } catch (e) {
-            if (e instanceof productService.NotFoundError) {
-                return reply.status(404).send({ error: 'NOT_FOUND', message: e.message });
-            }
-            throw e;
-        }
+        return productService.getById(id);
     });
 
     fastify.post('/products', async (request, reply) => {
@@ -49,15 +49,8 @@ export async function productRoutes(fastify: FastifyInstance) {
                 details: parsed.error.issues,
             });
         }
-        try {
-            const product = await productService.create(parsed.data);
-            return reply.status(201).send(product);
-        } catch (e) {
-            if (e instanceof productService.BadRequestError) {
-                return reply.status(400).send({ error: 'BAD_REQUEST', message: e.message });
-            }
-            throw e;
-        }
+        const product = await productService.create(parsed.data);
+        return reply.status(201).send(product);
     });
 
     fastify.patch('/products/:id', async (request, reply) => {
@@ -70,25 +63,11 @@ export async function productRoutes(fastify: FastifyInstance) {
                 details: parsed.error.issues,
             });
         }
-        try {
-            return await productService.update(id, parsed.data);
-        } catch (e) {
-            if (e instanceof productService.NotFoundError) {
-                return reply.status(404).send({ error: 'NOT_FOUND', message: e.message });
-            }
-            throw e;
-        }
+        return productService.update(id, parsed.data);
     });
 
-    fastify.delete('/products/:id', async (request, reply) => {
+    fastify.delete('/products/:id', async (request) => {
         const { id } = request.params as { id: string };
-        try {
-            return await productService.remove(id);
-        } catch (e) {
-            if (e instanceof productService.NotFoundError) {
-                return reply.status(404).send({ error: 'NOT_FOUND', message: e.message });
-            }
-            throw e;
-        }
+        return productService.remove(id);
     });
 }

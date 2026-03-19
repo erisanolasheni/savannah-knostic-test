@@ -4,7 +4,7 @@ interface ErrorStateProps {
 
 export function ErrorState({ message = 'Something went wrong.' }: ErrorStateProps) {
   return (
-    <div className="p-4 text-red-500">
+    <div className="rounded-md border border-destructive/50 bg-destructive/10 p-3 text-sm text-destructive">
       {message}
     </div>
   );

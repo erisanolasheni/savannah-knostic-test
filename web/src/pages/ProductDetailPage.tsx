@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { fetchProductById, updateProduct, deleteProduct } from '../api';
+import { toast } from 'sonner';
+import { fetchProductById, updateProduct, deleteProduct, fetchCategories } from '../api';
 import { useRoute, useLocation, Link } from 'wouter';
 import { useDocumentTitle } from '../hooks/useDocumentTitle';
 import {
@@ -9,8 +10,9 @@ import {
   type ProductFormData,
   LoadingState,
   ErrorState,
-  ConfirmButton,
+  DeleteConfirmDialog,
 } from '../components';
+import { Button } from '../components/ui/button';
 
 export function ProductDetailPage() {
   const [, params] = useRoute('/products/:id');
@@ -22,6 +24,11 @@ export function ProductDetailPage() {
     queryKey: ['product', id],
     queryFn: () => fetchProductById(id!),
     enabled: !!id,
+  });
+
+  const { data: categories = [] } = useQuery({
+    queryKey: ['categories'],
+    queryFn: fetchCategories,
   });
 
   const productData: ProductFormData = product
@@ -41,6 +48,8 @@ export function ProductDetailPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['product', id] });
       queryClient.invalidateQueries({ queryKey: ['products'] });
+      queryClient.invalidateQueries({ queryKey: ['categories'] });
+      toast.success('Product saved');
       setLocation('/');
     },
   });
@@ -49,55 +58,62 @@ export function ProductDetailPage() {
     mutationFn: () => deleteProduct(id!),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['products'] });
+      queryClient.invalidateQueries({ queryKey: ['categories'] });
       setLocation('/');
     },
   });
 
   useDocumentTitle(product ? `Edit: ${product.name}` : 'Product');
 
-  if (isLoading) return <LoadingState message="Loading product details..." />;
+  if (isLoading) return <LoadingState message="Loading product…" />;
   if (isError || !product) return <ErrorState message="Failed to load product." />;
 
   return (
-    <PageCard className="max-w-2xl mx-auto">
-      <div className="flex justify-between items-center mb-6">
-        <h2 className="text-xl font-medium">Edit Product: {product.name}</h2>
-        <div className="flex items-center gap-2">
-          <Link href="/" className="text-blue-600 hover:text-blue-900 text-sm py-2">
-            Back to List
+    <PageCard
+      className="max-w-2xl"
+      title={`Edit: ${product.name}`}
+      action={
+        <div className="flex gap-2">
+          <Link href="/">
+            <Button variant="outline" size="sm" className="transition-colors">
+              Back to List
+            </Button>
           </Link>
-          <ConfirmButton
-            label="Delete"
-            confirmLabel="Click again to delete"
+          <DeleteConfirmDialog
+            triggerLabel="Delete"
+            title="Delete product?"
+            description="This will permanently remove this product and cannot be undone."
             onConfirm={() => deleteMutation.mutate()}
             disabled={deleteMutation.isPending}
           />
         </div>
+      }
+    >
+      <div className="space-y-4">
+        <p className="text-sm text-muted-foreground">
+          Store: <span className="font-medium text-foreground">{product.store?.name}</span>
+        </p>
+        <ProductForm
+          data={{
+            name: currentData.name ?? '',
+            category: currentData.category ?? '',
+            price: currentData.price ?? 0,
+            quantity: currentData.quantity ?? 0,
+          }}
+          onChange={(next) => setFormData(next)}
+          onSubmit={() =>
+            updateMutation.mutate({
+              name: currentData.name,
+              category: currentData.category,
+              price: currentData.price,
+              quantity: currentData.quantity,
+            })
+          }
+          isSubmitting={updateMutation.isPending}
+          submitLabel="Save changes"
+          categoryOptions={categories}
+        />
       </div>
-
-      <div className="mb-4 text-sm text-gray-500">
-        Store: <span className="font-medium text-gray-900">{product.store?.name}</span>
-      </div>
-
-      <ProductForm
-        data={{
-          name: currentData.name ?? '',
-          category: currentData.category ?? '',
-          price: currentData.price ?? 0,
-          quantity: currentData.quantity ?? 0,
-        }}
-        onChange={(next) => setFormData(next)}
-        onSubmit={() =>
-          updateMutation.mutate({
-            name: currentData.name,
-            category: currentData.category,
-            price: currentData.price,
-            quantity: currentData.quantity,
-          })
-        }
-        isSubmitting={updateMutation.isPending}
-        submitLabel="Save Changes"
-      />
     </PageCard>
   );
 }

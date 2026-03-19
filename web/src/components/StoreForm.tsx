@@ -1,4 +1,6 @@
-const inputClass = 'mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2';
+import { Input } from "./ui/input";
+import { Label } from "./ui/label";
+import { Button } from "./ui/button";
 
 export interface StoreFormData {
   name: string;
@@ -18,7 +20,7 @@ export function StoreForm({
   onChange,
   onSubmit,
   isSubmitting = false,
-  submitLabel = 'Save',
+  submitLabel = "Save",
 }: StoreFormProps) {
   return (
     <form
@@ -26,36 +28,34 @@ export function StoreForm({
         e.preventDefault();
         onSubmit();
       }}
-      className="space-y-4"
+      className="space-y-5"
     >
-      <div>
-        <label className="block text-sm font-medium text-gray-700">Name</label>
-        <input
-          type="text"
-          className={inputClass}
+      <div className="space-y-2">
+        <Label className="text-sm font-medium">Name</Label>
+        <Input
           value={data.name}
           onChange={(e) => onChange({ ...data, name: e.target.value })}
+          className="h-9 transition-colors focus-visible:ring-2"
           required
         />
       </div>
-      <div>
-        <label className="block text-sm font-medium text-gray-700">Location</label>
-        <input
-          type="text"
-          className={inputClass}
+      <div className="space-y-2">
+        <Label className="text-sm font-medium">Location</Label>
+        <Input
           value={data.location}
           onChange={(e) => onChange({ ...data, location: e.target.value })}
+          className="h-9 transition-colors focus-visible:ring-2"
           required
         />
       </div>
-      <div className="pt-4">
-        <button
+      <div className="pt-2">
+        <Button
           type="submit"
           disabled={isSubmitting}
-          className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50"
+          className="h-9 w-full transition-colors"
         >
-          {isSubmitting ? 'Saving...' : submitLabel}
-        </button>
+          {isSubmitting ? "Saving…" : submitLabel}
+        </Button>
       </div>
     </form>
   );

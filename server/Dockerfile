@@ -1,20 +1,18 @@
 FROM node:22-alpine
 
+RUN apk add --no-cache wget
+
 WORKDIR /app
 
-COPY package*.json ./
-RUN npm install
+COPY package.json package-lock.json* ./
+RUN npm ci
 
 COPY prisma ./prisma
 RUN npx prisma generate
 
-COPY . .
-
-RUN npm run build || true
-# actually it's a tsx app, we can just run with tsx, or compile it.
-# package.json does not have build script yet, let's just run tsx. 
-# Better yet, let's use npx tsx src/index.ts
+COPY src ./src
 
 EXPOSE 3000
 
+# DB push + seed on startup (idempotent for dev); then run server
 CMD ["sh", "-c", "npx prisma db push && npx tsx prisma/seed.ts && npx tsx src/index.ts"]

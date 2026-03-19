@@ -1,3 +1,11 @@
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "./ui/select";
+
 interface StoreOption {
   id: string;
   name: string;
@@ -9,10 +17,10 @@ interface FilterBarProps {
   stores: StoreOption[];
   onStoreChange: (storeId: string) => void;
   onCategoryChange: (category: string) => void;
-  categoryOptions?: string[];
+  categoryOptions: string[];
 }
 
-const DEFAULT_CATEGORIES = ['Electronics', 'Accessories', 'Furniture', 'Lighting'];
+const ALL_VALUE = "__all__";
 
 export function FilterBar({
   storeId,
@@ -20,34 +28,45 @@ export function FilterBar({
   stores,
   onStoreChange,
   onCategoryChange,
-  categoryOptions = DEFAULT_CATEGORIES,
+  categoryOptions,
 }: FilterBarProps) {
+  const storeValue = storeId || ALL_VALUE;
+  const categoryValue = category || ALL_VALUE;
+
   return (
-    <div className="flex flex-wrap gap-4">
-      <select
-        className="border-gray-300 rounded-md shadow-sm p-2 bg-white border text-sm"
-        value={storeId}
-        onChange={(e) => onStoreChange(e.target.value)}
+    <div className="flex flex-wrap items-center gap-x-4 gap-y-3">
+      <Select
+        value={storeValue}
+        onValueChange={(v) => onStoreChange(v === ALL_VALUE ? "" : v)}
       >
-        <option value="">All Stores</option>
-        {stores.map((store) => (
-          <option key={store.id} value={store.id}>
-            {store.name}
-          </option>
-        ))}
-      </select>
-      <select
-        className="border-gray-300 rounded-md shadow-sm p-2 bg-white border text-sm"
-        value={category}
-        onChange={(e) => onCategoryChange(e.target.value)}
+        <SelectTrigger className="h-9 w-[200px]" aria-label="Filter by store">
+          <SelectValue placeholder="All Stores" />
+        </SelectTrigger>
+          <SelectContent>
+            <SelectItem value={ALL_VALUE}>All Stores</SelectItem>
+            {stores.map((store) => (
+              <SelectItem key={store.id} value={store.id}>
+                {store.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+      </Select>
+      <Select
+        value={categoryValue}
+        onValueChange={(v) => onCategoryChange(v === ALL_VALUE ? "" : v)}
       >
-        <option value="">All Categories</option>
-        {categoryOptions.map((cat) => (
-          <option key={cat} value={cat}>
-            {cat}
-          </option>
-        ))}
-      </select>
+        <SelectTrigger className="h-9 w-[180px]" aria-label="Filter by category">
+            <SelectValue placeholder="All Categories" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value={ALL_VALUE}>All Categories</SelectItem>
+            {categoryOptions.map((cat) => (
+              <SelectItem key={cat} value={cat}>
+                {cat}
+              </SelectItem>
+            ))}
+        </SelectContent>
+      </Select>
     </div>
   );
 }
