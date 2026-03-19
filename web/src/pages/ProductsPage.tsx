@@ -23,7 +23,7 @@ import {
   SelectValue,
 } from '../components/ui/select';
 import { Separator } from '../components/ui/separator';
-import { Search } from 'lucide-react';
+import { Search, SquarePen } from 'lucide-react';
 import { formatCurrency, formatNumber } from '../lib/utils';
 
 function getParamsFromSearch(): {
@@ -128,6 +128,11 @@ export function ProductsPage() {
   };
 
   const products = data?.data ?? [];
+  const pageTotalQty = products.reduce((sum, p) => sum + p.quantity, 0);
+  const pageTotalValue = products.reduce(
+    (sum, p) => sum + p.price * p.quantity,
+    0
+  );
   const columns: Array<{
     key: string;
     header: string;
@@ -152,10 +157,22 @@ export function ProductsPage() {
       render: (p) => p.store?.name ?? '—',
     },
     {
-      key: 'price',
-      header: 'Price',
+      key: 'unitPrice',
+      header: 'Unit price',
       align: 'right',
-      render: (p) => formatCurrency(p.price),
+      render: (p) => (
+        <span className="tabular-nums">{formatCurrency(p.price)}</span>
+      ),
+    },
+    {
+      key: 'lineValue',
+      header: 'Line value',
+      align: 'right',
+      render: (p) => (
+        <span className="tabular-nums font-medium">
+          {formatCurrency(p.price * p.quantity)}
+        </span>
+      ),
     },
     {
       key: 'stock',
@@ -176,12 +193,18 @@ export function ProductsPage() {
     },
     {
       key: 'actions',
-      header: 'Actions',
+      header: <span className="sr-only">Manage product</span>,
       align: 'right',
       render: (p) => (
         <Link href={`/products/${p.id}`}>
-          <Button variant="link" className="h-auto p-0 text-primary font-medium">
-            Manage
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8 text-muted-foreground hover:text-primary"
+            aria-label={`Manage ${p.name}`}
+          >
+            <SquarePen className="h-4 w-4" aria-hidden />
           </Button>
         </Link>
       ),
@@ -199,9 +222,12 @@ export function ProductsPage() {
         </Link>
       }
     >
-      <div className="mt-6 space-y-6">
-        <div className="rounded-lg border border-border bg-muted/30 px-6 py-5">
-          <div className="flex flex-col gap-4">
+      <div className="space-y-4">
+        <section
+          className="rounded-lg border border-border bg-muted/40 px-3 py-2.5 sm:px-4"
+          aria-label="Filters and search"
+        >
+          <div className="flex flex-wrap items-center gap-2 sm:gap-3">
             <FilterBar
               storeId={storeId}
               category={category}
@@ -210,47 +236,56 @@ export function ProductsPage() {
               onStoreChange={(id) => updateParams({ storeId: id })}
               onCategoryChange={(cat) => updateParams({ category: cat })}
             />
-            <Separator />
-            <div className="flex flex-wrap items-center gap-3">
+            <Separator
+              orientation="vertical"
+              className="hidden h-8 w-px sm:block"
+            />
+            <div className="w-52 min-w-[10rem] shrink-0">
               <InputWithIcon
                 type="search"
                 placeholder="Search by name or category…"
                 value={q}
                 onChange={(e) => updateParams({ q: e.target.value })}
-                className="w-56"
+                className="h-9"
                 aria-label="Search products"
                 icon={<Search className="h-4 w-4" />}
               />
-              <Select
-                value={sortBy}
-                onValueChange={(v) => updateParams({ sortBy: v as ProductSortBy })}
-              >
-                <SelectTrigger className="h-9 w-[130px]" aria-label="Sort by">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {SORT_OPTIONS.map((o) => (
-                    <SelectItem key={o.value} value={o.value}>
-                      {o.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <Select
-                value={sortOrder}
-                onValueChange={(v) => updateParams({ sortOrder: v as SortOrder })}
-              >
-                <SelectTrigger className="h-9 w-[120px]" aria-label="Sort order">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="asc">Ascending</SelectItem>
-                  <SelectItem value="desc">Descending</SelectItem>
-                </SelectContent>
-              </Select>
             </div>
+            <Select
+              value={sortBy}
+              onValueChange={(v) => updateParams({ sortBy: v as ProductSortBy })}
+            >
+              <SelectTrigger
+                className="h-9 w-[7.5rem] shrink-0 sm:w-32"
+                aria-label="Sort by"
+              >
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {SORT_OPTIONS.map((o) => (
+                  <SelectItem key={o.value} value={o.value}>
+                    {o.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Select
+              value={sortOrder}
+              onValueChange={(v) => updateParams({ sortOrder: v as SortOrder })}
+            >
+              <SelectTrigger
+                className="h-9 w-[7.5rem] shrink-0 sm:w-[7.5rem]"
+                aria-label="Sort order"
+              >
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="asc">Ascending</SelectItem>
+                <SelectItem value="desc">Descending</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
-        </div>
+        </section>
 
         {isLoading ? (
           <LoadingState message="Loading inventory…" />
@@ -261,17 +296,28 @@ export function ProductsPage() {
               data={products}
               keyFn={(p) => p.id}
               emptyMessage="No products found matching filters or search."
+              footerCells={
+                products.length > 0
+                  ? [
+                      <span key="label" className="text-muted-foreground">
+                        Totals <span className="font-normal">(this page)</span>
+                      </span>,
+                      null,
+                      null,
+                      <span key="unit-foot" className="text-muted-foreground">
+                        —
+                      </span>,
+                      <span key="line" className="tabular-nums font-semibold">
+                        {formatCurrency(pageTotalValue)}
+                      </span>,
+                      <span key="qty" className="tabular-nums font-semibold">
+                        {formatNumber(pageTotalQty)}
+                      </span>,
+                      null,
+                    ]
+                  : undefined
+              }
             />
-            {products.length > 0 && (
-              <div className="flex items-center border-t border-border pt-3 text-sm text-muted-foreground">
-                <span>
-                  Total on this page: {formatNumber(products.reduce((sum: number, p: { quantity: number }) => sum + p.quantity, 0))} units
-                  <span className="ml-2">
-                    ({formatCurrency(products.reduce((sum: number, p: { price: number; quantity: number }) => sum + p.price * p.quantity, 0))} value)
-                  </span>
-                </span>
-              </div>
-            )}
             {products.length > 0 && (
               <Pagination
                 page={data?.page ?? 1}

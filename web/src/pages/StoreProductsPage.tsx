@@ -21,8 +21,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '../components/ui/select';
-import { Search } from 'lucide-react';
-import { Separator } from '../components/ui/separator';
+import { Search, SquarePen } from 'lucide-react';
 import { formatCurrency, formatNumber } from '../lib/utils';
 
 function getStoreProductParamsFromSearch(): {
@@ -112,6 +111,15 @@ export function StoreProductsPage() {
   if (isError || !store) return <ErrorState message="Failed to load store or products." />;
 
   const products = data?.data ?? [];
+  const pageTotalQty = products.reduce(
+    (sum: number, p: { quantity: number }) => sum + p.quantity,
+    0
+  );
+  const pageTotalValue = products.reduce(
+    (sum: number, p: { price: number; quantity: number }) =>
+      sum + p.price * p.quantity,
+    0
+  );
   const columns = [
     {
       key: 'name',
@@ -128,10 +136,22 @@ export function StoreProductsPage() {
       ),
     },
     {
-      key: 'price',
-      header: 'Price',
+      key: 'unitPrice',
+      header: 'Unit price',
       align: 'right' as const,
-      render: (p: { price: number }) => formatCurrency(p.price),
+      render: (p: { price: number }) => (
+        <span className="tabular-nums">{formatCurrency(p.price)}</span>
+      ),
+    },
+    {
+      key: 'lineValue',
+      header: 'Line value',
+      align: 'right' as const,
+      render: (p: { price: number; quantity: number }) => (
+        <span className="tabular-nums font-medium">
+          {formatCurrency(p.price * p.quantity)}
+        </span>
+      ),
     },
     {
       key: 'stock',
@@ -154,12 +174,18 @@ export function StoreProductsPage() {
     },
     {
       key: 'actions',
-      header: 'Actions',
+      header: <span className="sr-only">Manage product</span>,
       align: 'right' as const,
-      render: (p: { id: string }) => (
+      render: (p: { id: string; name: string }) => (
         <Link href={`/products/${p.id}`}>
-          <Button variant="link" className="h-auto p-0 text-primary font-medium">
-            Manage
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8 text-muted-foreground hover:text-primary"
+            aria-label={`Manage ${p.name}`}
+          >
+            <SquarePen className="h-4 w-4" aria-hidden />
           </Button>
         </Link>
       ),
@@ -202,22 +228,27 @@ export function StoreProductsPage() {
           </ol>
         </nav>
 
-        <div className="rounded-lg border border-border bg-muted/30 px-6 py-5">
-          <div className="flex flex-wrap items-center gap-3">
-            <InputWithIcon
-              type="search"
-              placeholder="Search by name or category…"
-              value={q}
-              onChange={(e) => updateParams({ q: e.target.value })}
-              className="w-56"
-              aria-label="Search products in store"
-              icon={<Search className="h-4 w-4" />}
-            />
+        <div className="rounded-lg border border-border bg-muted/40 px-3 py-2.5 sm:px-4">
+          <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+            <div className="w-52 min-w-[10rem] shrink-0">
+              <InputWithIcon
+                type="search"
+                placeholder="Search by name or category…"
+                value={q}
+                onChange={(e) => updateParams({ q: e.target.value })}
+                className="h-9"
+                aria-label="Search products in store"
+                icon={<Search className="h-4 w-4" />}
+              />
+            </div>
             <Select
               value={sortBy}
               onValueChange={(v) => updateParams({ sortBy: v as ProductSortBy })}
             >
-              <SelectTrigger className="h-9 w-[130px]" aria-label="Sort by">
+              <SelectTrigger
+                className="h-9 w-[7.5rem] shrink-0 sm:w-32"
+                aria-label="Sort by"
+              >
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -232,7 +263,10 @@ export function StoreProductsPage() {
               value={sortOrder}
               onValueChange={(v) => updateParams({ sortOrder: v as SortOrder })}
             >
-              <SelectTrigger className="h-9 w-[120px]" aria-label="Sort order">
+              <SelectTrigger
+                className="h-9 w-[7.5rem] shrink-0 sm:w-[7.5rem]"
+                aria-label="Sort order"
+              >
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -248,17 +282,27 @@ export function StoreProductsPage() {
           data={products}
           keyFn={(p: { id: string }) => p.id}
           emptyMessage="No products in this store matching search."
+          footerCells={
+            products.length > 0
+              ? [
+                  <span key="label" className="text-muted-foreground">
+                    Totals <span className="font-normal">(this page)</span>
+                  </span>,
+                  null,
+                  <span key="unit-foot" className="text-muted-foreground">
+                    —
+                  </span>,
+                  <span key="line" className="tabular-nums font-semibold">
+                    {formatCurrency(pageTotalValue)}
+                  </span>,
+                  <span key="qty" className="tabular-nums font-semibold">
+                    {formatNumber(pageTotalQty)}
+                  </span>,
+                  null,
+                ]
+              : undefined
+          }
         />
-        {products.length > 0 && (
-          <div className="flex items-center border-t border-border pt-3 text-sm text-muted-foreground">
-            <span>
-              Total on this page: {formatNumber(products.reduce((sum: number, p: { quantity: number }) => sum + p.quantity, 0))} units
-              <span className="ml-2">
-                ({formatCurrency(products.reduce((sum: number, p: { price: number; quantity: number }) => sum + p.price * p.quantity, 0))} value)
-              </span>
-            </span>
-          </div>
-        )}
         {products.length > 0 && data && (
           <Pagination
             page={data.page}

@@ -1,5 +1,9 @@
 import { Input } from "./ui/input";
-import { Label } from "./ui/label";
+import {
+  FormItem,
+  FormLabel,
+  FormControl,
+} from "./ui/form";
 import {
   Select,
   SelectContent,
@@ -53,106 +57,109 @@ export function ProductForm({
         e.preventDefault();
         onSubmit();
       }}
-      className="space-y-5"
+      className="space-y-6"
     >
       {showStoreSelect && (
-        <div className="space-y-2">
-          <Label className="text-sm font-medium">Store</Label>
+        <FormItem>
+          <FormLabel>Store</FormLabel>
+          <FormControl>
+            <Select
+              value={storeValue}
+              onValueChange={(v) =>
+                onChange({
+                  ...data,
+                  storeId: v === PLACEHOLDER_STORE ? undefined : v,
+                })
+              }
+              required
+            >
+              <SelectTrigger aria-label="Select store">
+                <SelectValue placeholder="Select store" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value={PLACEHOLDER_STORE} disabled>
+                  Select store
+                </SelectItem>
+                {storeOptions.map((s) => (
+                  <SelectItem key={s.id} value={s.id}>
+                    {s.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </FormControl>
+        </FormItem>
+      )}
+      <FormItem>
+        <FormLabel>Name</FormLabel>
+        <FormControl>
+          <Input
+            value={data.name}
+            onChange={(e) => onChange({ ...data, name: e.target.value })}
+            required
+          />
+        </FormControl>
+      </FormItem>
+      <FormItem>
+        <FormLabel>Category</FormLabel>
+        <FormControl>
           <Select
-            value={storeValue}
+            value={categoryValue}
             onValueChange={(v) =>
-              onChange({
-                ...data,
-                storeId: v === PLACEHOLDER_STORE ? undefined : v,
-              })
+              onChange({ ...data, category: v === PLACEHOLDER_CATEGORY ? "" : v })
             }
             required
           >
-            <SelectTrigger className="h-9" aria-label="Select store">
-              <SelectValue placeholder="Select store" />
+            <SelectTrigger aria-label="Select category">
+              <SelectValue placeholder="Select category" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value={PLACEHOLDER_STORE} disabled>
-                Select store
+              <SelectItem value={PLACEHOLDER_CATEGORY} disabled>
+                Select category
               </SelectItem>
-              {storeOptions.map((s) => (
-                <SelectItem key={s.id} value={s.id}>
-                  {s.name}
+              {categories.map((c) => (
+                <SelectItem key={c} value={c}>
+                  {c}
                 </SelectItem>
               ))}
             </SelectContent>
           </Select>
-        </div>
-      )}
-      <div className="space-y-2">
-        <Label className="text-sm font-medium">Name</Label>
-        <Input
-          value={data.name}
-          onChange={(e) => onChange({ ...data, name: e.target.value })}
-          className="h-9 transition-colors focus-visible:ring-2"
-          required
-        />
-      </div>
-      <div className="space-y-2">
-        <Label className="text-sm font-medium">Category</Label>
-        <Select
-          value={categoryValue}
-          onValueChange={(v) =>
-            onChange({ ...data, category: v === PLACEHOLDER_CATEGORY ? "" : v })
-          }
-          required
-        >
-          <SelectTrigger className="h-9" aria-label="Select category">
-            <SelectValue placeholder="Select category" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value={PLACEHOLDER_CATEGORY} disabled>
-              Select category
-            </SelectItem>
-            {categories.map((c) => (
-              <SelectItem key={c} value={c}>
-                {c}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
-      <div className="space-y-2">
-        <Label className="text-sm font-medium">Price ($)</Label>
-        <Input
-          type="number"
-          step="0.01"
-          min="0"
-          value={data.price || ""}
-          onChange={(e) =>
-            onChange({ ...data, price: parseFloat(e.target.value) || 0 })
-          }
-          className="h-9 transition-colors focus-visible:ring-2"
-          required
-        />
-      </div>
-      <div className="space-y-2">
-        <Label className="text-sm font-medium">Stock quantity</Label>
-        <Input
-          type="number"
-          min="0"
-          value={data.quantity ?? ""}
-          onChange={(e) =>
-            onChange({
-              ...data,
-              quantity: parseInt(e.target.value, 10) || 0,
-            })
-          }
-          className="h-9 transition-colors focus-visible:ring-2"
-          required
-        />
-      </div>
+        </FormControl>
+      </FormItem>
+      <FormItem>
+        <FormLabel>Price ($)</FormLabel>
+        <FormControl>
+          <Input
+            type="number"
+            step="0.01"
+            min="0"
+            value={data.price || ""}
+            onChange={(e) =>
+              onChange({ ...data, price: parseFloat(e.target.value) || 0 })
+            }
+            required
+          />
+        </FormControl>
+      </FormItem>
+      <FormItem>
+        <FormLabel>Stock quantity</FormLabel>
+        <FormControl>
+          <Input
+            type="number"
+            min="0"
+            value={data.quantity ?? ""}
+            onChange={(e) =>
+              onChange({
+                ...data,
+                quantity: parseInt(e.target.value, 10) || 0,
+              })
+            }
+            required
+          />
+        </FormControl>
+      </FormItem>
       <div className="pt-2">
-        <Button
-          type="submit"
-          disabled={isSubmitting}
-          className="h-9 w-full transition-colors"
-        >
+        <Button type="submit" disabled={isSubmitting} className="w-full">
           {isSubmitting ? "Saving…" : submitLabel}
         </Button>
       </div>

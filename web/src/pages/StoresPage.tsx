@@ -74,12 +74,20 @@ export function StoresPage() {
           data={stores ?? []}
           keyFn={(s: { id: string }) => s.id}
           emptyMessage="No stores yet. Add one to get started."
+          footerCells={
+            (stores?.length ?? 0) > 0
+              ? [
+                  <span key="tot" className="text-muted-foreground">
+                    Totals
+                  </span>,
+                  <span key="n" className="tabular-nums text-muted-foreground">
+                    {formatNumber(stores!.length)} stores
+                  </span>,
+                  null,
+                ]
+              : undefined
+          }
         />
-        {(stores?.length ?? 0) > 0 && (
-          <div className="flex items-center border-t border-border pt-3 text-sm text-muted-foreground">
-            Total: {formatNumber((stores ?? []).length)} stores
-          </div>
-        )}
       </div>
     </PageCard>
   );

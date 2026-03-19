@@ -1,7 +1,9 @@
+import type { ReactNode } from "react";
 import {
   Table,
   TableBody,
   TableCell,
+  TableFooter,
   TableHead,
   TableHeader,
   TableRow,
@@ -10,9 +12,9 @@ import { cn } from "../lib/utils";
 
 interface Column<T> {
   key: string;
-  header: string;
+  header: ReactNode;
   align?: "left" | "right";
-  render: (item: T) => React.ReactNode;
+  render: (item: T) => ReactNode;
 }
 
 interface DataTableProps<T> {
@@ -20,6 +22,8 @@ interface DataTableProps<T> {
   data: T[];
   keyFn: (item: T) => string;
   emptyMessage?: string;
+  /** One cell per column; use null for empty cells. Shown as a totals row when provided. */
+  footerCells?: ReactNode[];
 }
 
 export function DataTable<T>({
@@ -27,6 +31,7 @@ export function DataTable<T>({
   data,
   keyFn,
   emptyMessage = "No items found.",
+  footerCells,
 }: DataTableProps<T>) {
   if (data.length === 0) {
     return (
@@ -39,7 +44,7 @@ export function DataTable<T>({
   return (
     <Table>
       <TableHeader>
-        <TableRow className="border-border bg-muted/50 hover:bg-muted/50">
+        <TableRow className="bg-muted/50 hover:bg-muted/50">
           {columns.map((col) => (
             <TableHead
               key={col.key}
@@ -70,6 +75,24 @@ export function DataTable<T>({
           </TableRow>
         ))}
       </TableBody>
+      {footerCells &&
+        footerCells.length === columns.length && (
+          <TableFooter>
+            <TableRow className="hover:bg-transparent">
+              {columns.map((col, i) => (
+                <TableCell
+                  key={col.key}
+                  className={cn(
+                    "border-b-0 bg-transparent py-3 font-semibold text-foreground",
+                    col.align === "right" && "text-right"
+                  )}
+                >
+                  {footerCells[i]}
+                </TableCell>
+              ))}
+            </TableRow>
+          </TableFooter>
+        )}
     </Table>
   );
 }

@@ -1,5 +1,5 @@
 import { Input } from "./ui/input";
-import { Label } from "./ui/label";
+import { FormItem, FormLabel, FormControl } from "./ui/form";
 import { Button } from "./ui/button";
 
 export interface StoreFormData {
@@ -28,32 +28,30 @@ export function StoreForm({
         e.preventDefault();
         onSubmit();
       }}
-      className="space-y-5"
+      className="space-y-6"
     >
-      <div className="space-y-2">
-        <Label className="text-sm font-medium">Name</Label>
-        <Input
-          value={data.name}
-          onChange={(e) => onChange({ ...data, name: e.target.value })}
-          className="h-9 transition-colors focus-visible:ring-2"
-          required
-        />
-      </div>
-      <div className="space-y-2">
-        <Label className="text-sm font-medium">Location</Label>
-        <Input
-          value={data.location}
-          onChange={(e) => onChange({ ...data, location: e.target.value })}
-          className="h-9 transition-colors focus-visible:ring-2"
-          required
-        />
-      </div>
+      <FormItem>
+        <FormLabel>Name</FormLabel>
+        <FormControl>
+          <Input
+            value={data.name}
+            onChange={(e) => onChange({ ...data, name: e.target.value })}
+            required
+          />
+        </FormControl>
+      </FormItem>
+      <FormItem>
+        <FormLabel>Location</FormLabel>
+        <FormControl>
+          <Input
+            value={data.location}
+            onChange={(e) => onChange({ ...data, location: e.target.value })}
+            required
+          />
+        </FormControl>
+      </FormItem>
       <div className="pt-2">
-        <Button
-          type="submit"
-          disabled={isSubmitting}
-          className="h-9 w-full transition-colors"
-        >
+        <Button type="submit" disabled={isSubmitting} className="w-full">
           {isSubmitting ? "Saving…" : submitLabel}
         </Button>
       </div>
